@@ -11,19 +11,26 @@ public class Student extends JLabel {
 
     int x;
     int y;
+    int col;
+    int row;
     double voice;
     double making;
     double sound;
+    double heard = -1;
+    double last_heard;
     int time = -1;
+    int afraid = -1;
     ArrayList<Student> talkers = new ArrayList<Student>();
 
-    public Student(int x, int y){
-        this(x, y, random.nextDouble() * 30 + 45);
+    public Student(int x, int y, int col, int row){
+        this(x, y, col, row, random.nextDouble() * 30 + 45);
     }
 
-    public Student(int x, int y, double voice){
+    public Student(int x, int y, int col, int row, double voice){
         this.x = x;
         this.y = y;
+        this.col = col;
+        this.row = row;
         this.voice = voice;
         this.sound = voice;
         setText(format.format(making));
@@ -63,28 +70,49 @@ public class Student extends JLabel {
         return this;
     }
 
+    private void becomeAfraid(){
+        making = 0;
+        time = -1;
+        afraid = 10;
+    }
+
     public void nextSecond() {
         if(!talkers.isEmpty()) {
-            if (time > 0) {
-                making = voice + (sound - making) / 15;
-                time--;
-            } else if (time == 0) {
-                if (random.nextDouble() > 0.3) {
-                    talkers.get(random.nextInt(talkers.size())).startTalking();
-                }else{
-                    talkers.get(random.nextInt(talkers.size())).startTalking().time *= -1;
+            if(afraid > 0){
+                afraid--;
+            }else if(afraid == 0){
+                talkers.get(random.nextInt(talkers.size())).startTalking().time *= -1;
+                afraid--;
+            }else {
+                if (last_heard - heard > 10) {
+                    becomeAfraid();
+                } else {
+                    if (time > 0) {
+                        if(heard < 48 ){
+                            becomeAfraid();
+                        }else {
+                            making = voice + (sound - making) / 15;
+                            time--;
+                        }
+                    } else if (time == 0) {
+                        if (random.nextDouble() > 0.3) {
+                            talkers.get(random.nextInt(talkers.size())).startTalking();
+                        } else {
+                            talkers.get(random.nextInt(talkers.size())).startTalking().time *= -1;
+                        }
+                        making = 0;
+                        time--;
+                    } else if (time < -1) {
+                        time *= -1;
+                    }
                 }
-                making = 0;
-                time--;
-            }else if(time < -1){
-                time *= -1;
             }
         }
         update();
     }
 
     public void update(){
-        setText(format.format(making)+" "+time);
+        setText(format.format(making)+" "+format.format(heard)+" "+format.format(sound));
         setBackground(getColor());
     }
 }
